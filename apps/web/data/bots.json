@@ -1,0 +1,151 @@
+{
+  "bots": [
+    {
+      "id": "BOT-001",
+      "name": "ALPHA TRADER",
+      "status": "active",
+      "strategy": "Grid Trading",
+      "pair": "BTC/USDT",
+      "profit24h": 2.45,
+      "totalProfit": 1247.89,
+      "winRate": 78.5,
+      "trades24h": 23,
+      "balance": 15420.5,
+      "lastTrade": "2025-01-14T10:30:00Z",
+      "riskLevel": "medium"
+    },
+    {
+      "id": "BOT-002",
+      "name": "MOMENTUM HUNTER",
+      "status": "active",
+      "strategy": "Momentum",
+      "pair": "ETH/USDT",
+      "profit24h": 4.12,
+      "totalProfit": 2156.34,
+      "winRate": 82.3,
+      "trades24h": 18,
+      "balance": 8750.25,
+      "lastTrade": "2025-01-14T10:25:00Z",
+      "riskLevel": "high"
+    },
+    {
+      "id": "BOT-003",
+      "name": "SCALP MASTER",
+      "status": "paused",
+      "strategy": "Scalping",
+      "pair": "ADA/USDT",
+      "profit24h": -0.85,
+      "totalProfit": 567.12,
+      "winRate": 65.8,
+      "trades24h": 45,
+      "balance": 3200.75,
+      "lastTrade": "2025-01-14T09:15:00Z",
+      "riskLevel": "high"
+    },
+    {
+      "id": "BOT-004",
+      "name": "WHALE TRACKER",
+      "status": "active",
+      "strategy": "Volume Analysis",
+      "pair": "SOL/USDT",
+      "profit24h": 1.89,
+      "totalProfit": 892.45,
+      "winRate": 71.2,
+      "trades24h": 12,
+      "balance": 6890.3,
+      "lastTrade": "2025-01-14T10:28:00Z",
+      "riskLevel": "low"
+    },
+    {
+      "id": "BOT-005",
+      "name": "ARBITRAGE PRO",
+      "status": "maintenance",
+      "strategy": "Arbitrage",
+      "pair": "MULTI",
+      "profit24h": 0.0,
+      "totalProfit": 3421.67,
+      "winRate": 89.4,
+      "trades24h": 0,
+      "balance": 12500.0,
+      "lastTrade": "2025-01-14T08:00:00Z",
+      "riskLevel": "low"
+    }
+  ],
+  "portfolio": {
+    "totalBalance": 46763.8,
+    "totalProfit24h": 7.61,
+    "totalProfitAll": 8285.47,
+    "activeBots": 3,
+    "totalTrades24h": 98,
+    "avgWinRate": 77.4
+  },
+  "markets": [
+    {
+      "symbol": "BTC/USDT",
+      "price": 42850.5,
+      "change24h": 2.34,
+      "volume24h": "1.2B",
+      "high24h": 43200.0,
+      "low24h": 41800.0
+    },
+    {
+      "symbol": "ETH/USDT",
+      "price": 2650.75,
+      "change24h": -1.45,
+      "volume24h": "890M",
+      "high24h": 2720.0,
+      "low24h": 2580.0
+    },
+    {
+      "symbol": "ADA/USDT",
+      "price": 0.485,
+      "change24h": 3.21,
+      "volume24h": "245M",
+      "high24h": 0.492,
+      "low24h": 0.468
+    },
+    {
+      "symbol": "SOL/USDT",
+      "price": 98.45,
+      "change24h": 5.67,
+      "volume24h": "456M",
+      "high24h": 102.3,
+      "low24h": 92.15
+    }
+  ],
+  "recentTrades": [
+    {
+      "id": "TRD-001",
+      "botId": "BOT-001",
+      "botName": "ALPHA TRADER",
+      "pair": "BTC/USDT",
+      "type": "BUY",
+      "amount": 0.025,
+      "price": 42750.0,
+      "profit": 45.3,
+      "timestamp": "2025-01-14T10:30:00Z"
+    },
+    {
+      "id": "TRD-002",
+      "botId": "BOT-002",
+      "botName": "MOMENTUM HUNTER",
+      "pair": "ETH/USDT",
+      "type": "SELL",
+      "amount": 1.5,
+      "price": 2665.5,
+      "profit": 78.9,
+      "timestamp": "2025-01-14T10:25:00Z"
+    },
+    {
+      "id": "TRD-003",
+      "botId": "BOT-004",
+      "botName": "WHALE TRACKER",
+      "pair": "SOL/USDT",
+      "type": "BUY",
+      "amount": 15.0,
+      "price": 97.8,
+      "profit": 23.45,
+      "timestamp": "2025-01-14T10:28:00Z"
+    }
+  ]
+}
