@@ -74,7 +74,7 @@ export default function IntelligencePage() {
     },
   ]
 
-  const getClassificationColor = (classification) => {
+  const getClassificationColor = (classification: string) => {
     switch (classification) {
       case "TOP SECRET":
         return "bg-red-500/20 text-red-500"
@@ -87,22 +87,22 @@ export default function IntelligencePage() {
     }
   }
 
-  const getThreatColor = (threat) => {
+  const getThreatColor = (threat: string) => {
     switch (threat) {
       case "critical":
         return "bg-red-500/20 text-red-500"
       case "high":
-        return "bg-orange-500/20 text-orange-500"
+        return "bg-red-400/20 text-red-400"
       case "medium":
-        return "bg-neutral-500/20 text-neutral-300"
+        return "bg-yellow-500/20 text-yellow-500"
       case "low":
-        return "bg-white/20 text-white"
+        return "bg-green-500/20 text-green-500"
       default:
-        return "bg-neutral-500/20 text-neutral-300"
+        return "bg-white/20 text-neutral-300"
     }
   }
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "verified":
         return "bg-white/20 text-white"

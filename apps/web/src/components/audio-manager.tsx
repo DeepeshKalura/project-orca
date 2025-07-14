@@ -1,12 +1,10 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState } from "react"
 
 export function AudioManager() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [volume, setVolume] = useState(0.3)
-  const oceanAmbientRef = useRef<HTMLAudioElement | null>(null)
-  const whaleCallRef = useRef<HTMLAudioElement | null>(null)
 
   // Complete the audio generation with proper ocean sounds and whale calls
   useEffect(() => {

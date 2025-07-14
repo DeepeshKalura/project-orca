@@ -24,11 +24,26 @@ import {
 } from "lucide-react"
 import botsData from "../../../data/bots.json"
 
-export default function Dashboard() {
-  const [selectedBot, setSelectedBot] = useState(null)
-  const [data, setData] = useState(botsData)
+interface Bot {
+  id: string
+  name: string
+  status: string
+  strategy: string
+  pair: string
+  profit24h: number
+  totalProfit: number
+  winRate: number
+  trades24h: number
+  balance: number
+  lastTrade: string
+  riskLevel: string
+}
 
-  const getStatusColor = (status) => {
+export default function Dashboard() {
+  const [selectedBot, setSelectedBot] = useState<Bot | null>(null)
+  const [data] = useState(botsData)
+
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
         return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border-green-200 dark:border-green-800"
@@ -41,7 +56,7 @@ export default function Dashboard() {
     }
   }
 
-  const getRiskColor = (risk) => {
+  const getRiskColor = (risk: string) => {
     switch (risk) {
       case "low":
         return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
@@ -54,18 +69,18 @@ export default function Dashboard() {
     }
   }
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
     }).format(amount)
   }
 
-  const formatPercentage = (value) => {
+  const formatPercentage = (value: number) => {
     return `${value > 0 ? "+" : ""}${value.toFixed(2)}%`
   }
 
-  const orcaStrategies = {
+  const orcaStrategies: { [key: string]: { icon: React.ReactElement; name: string } } = {
     "Grid Trading": { icon: <Navigation className="w-5 h-5" />, name: "Navigator Orca" },
     Momentum: { icon: <Fish className="w-5 h-5" />, name: "Hunter Orca" },
     Scalping: { icon: <Waves className="w-5 h-5" />, name: "Swift Orca" },
@@ -108,7 +123,7 @@ export default function Dashboard() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Ocean Command Center</h1>
           <p className="text-slate-600 dark:text-slate-400">
-            Monitor your pod's hunting performance across the crypto ocean
+            Monitor your pod&apos;s hunting performance across the crypto ocean
           </p>
         </div>
 
@@ -124,7 +139,7 @@ export default function Dashboard() {
                 {formatCurrency(data.portfolio.totalBalance)}
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                {formatPercentage(data.portfolio.totalProfit24h)} from yesterday's hunt
+                {formatPercentage(data.portfolio.totalProfit24h)} from yesterday&apos;s hunt
               </p>
             </CardContent>
           </Card>
@@ -374,7 +389,7 @@ export default function Dashboard() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Today's Hunt</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Today&apos;s Hunt</p>
                   <p
                     className={`text-lg font-bold ${selectedBot.profit24h >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
                   >
