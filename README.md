@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Project Orca
+
+A Next.js monorepo project with modern tooling and workspace configuration.
+
+## Structure
+
+```
+project-orca/
+├── apps/
+│   └── web/          # Main Next.js application
+├── packages/         # Shared packages and libraries
+├── package.json      # Root workspace configuration
+└── README.md
+```
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+ 
+- npm 8+
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Install dependencies for all workspaces
+npm install
+
+# Or use the convenience script
+npm run install:all
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Development
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Start the development server
+npm run dev
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Build the application
+npm run build
 
-## Learn More
+# Start the production server
+npm run start
 
-To learn more about Next.js, take a look at the following resources:
+# Run linting
+npm run lint
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Clean all node_modules
+npm run clean
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Working with Workspaces
 
-## Deploy on Vercel
+```bash
+# Run commands in specific workspaces
+npm run dev --workspace=apps/web
+npm run build --workspace=apps/web
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Install dependencies to specific workspace
+npm install <package-name> --workspace=apps/web
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Install dev dependencies
+npm install <package-name> --workspace=apps/web --save-dev
+```
+
+## Applications
+
+### Web (`apps/web`)
+
+The main Next.js application with:
+- TypeScript
+- Tailwind CSS
+- ESLint
+- App Router
+- Source directory structure
+
+## Packages
+
+The `packages/` directory is ready for shared libraries and utilities that can be used across multiple applications.
+
+## Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run clean` - Clean all node_modules
+- `npm run install:all` - Install all dependencies
+
+## License
+
+MIT

@@ -1,27 +1,28 @@
 {
   "name": "project-orca",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
+  "description": "Project Orca - Next.js Monorepo",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "npm run dev --workspace=apps/web",
+    "build": "npm run build --workspace=apps/web",
+    "start": "npm run start --workspace=apps/web",
+    "lint": "npm run lint --workspace=apps/web",
+    "clean": "rm -rf node_modules && rm -rf apps/*/node_modules && rm -rf packages/*/node_modules",
+    "install:all": "npm install"
   },
-  "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "next": "15.3.5"
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
-  "devDependencies": {
-    "typescript": "^5",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
-    "eslint": "^9",
-    "eslint-config-next": "15.3.5",
-    "@eslint/eslintrc": "^3"
-  }
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-username/project-orca.git"
+  },
+  "author": "",
+  "license": "MIT"
 }
