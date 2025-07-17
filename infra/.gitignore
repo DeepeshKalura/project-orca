@@ -1,0 +1,10 @@
+# Terraform-specific files to ignore
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+
+# Ignore variable files
+*.tfvars
+*.tfvars.json

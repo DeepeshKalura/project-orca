@@ -1,0 +1,15 @@
+{
+  "name": "Project Orca: Infrastructure",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "hashicorp.terraform",
+        "ms-azuretools.azure-account"
+      ]
+    }
+  },
+  "postCreateCommand": "echo 'Infrastructure Dev Container is ready. Run terraform commands in this terminal.'"
+}

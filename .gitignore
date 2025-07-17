@@ -95,3 +95,4 @@ temp/
 *.njsproj
 *.sln
 *.sw?
+freqtrade-docs/
