@@ -114,3 +114,5 @@ bot/user_data/plot/
 bot/user_data/data/
 # Ignore python cache
 **/__pycache__/
+
+bot/user_data/hyperopt_results/
