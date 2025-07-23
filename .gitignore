@@ -96,3 +96,21 @@ temp/
 *.sln
 *.sw?
 freqtrade-docs/
+.sca/
+
+
+# Freqtrade specific ignores
+# Ignore the actual config file with secrets
+bot/user_data/config.json
+# Ignore the sqlite database
+bot/user_data/*.sqlite
+# Ignore log files
+bot/user_data/logs/*.log
+# Ignore backtest results
+bot/user_data/backtest_results/
+# Ignore plot directories
+bot/user_data/plot/
+
+bot/user_data/data/
+# Ignore python cache
+**/__pycache__/

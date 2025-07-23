@@ -87,6 +87,5 @@ The `packages/` directory is ready for shared libraries and utilities that can b
 - `npm run clean` - Clean all node_modules
 - `npm run install:all` - Install all dependencies
 
-## License
-
-MIT
+## Deployment of the stragies.
+scp strategies/binance_strategy.py project-orca:~/ft_userdata/user_data/strategies/

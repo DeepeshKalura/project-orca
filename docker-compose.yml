@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  freqtrade:
+    image: freqtradeorg/freqtrade:stable
+    # We rename the container to make it easier to reference in commands
+    container_name: freqtrade
+    # Restart the container automatically unless it's explicitly stopped
+    restart: unless-stopped
+    # Expose the Freqtrade UI/API port
+    ports:
+      - "8080:8080"
+    # The key to our workflow: Mount local directories into the container.
+    # Changes made locally will be reflected inside the container instantly.
+    volumes:
+      - "./bot/user_data:/freqtrade/user_data"
+    # Command to start the bot. It will use the config.json inside the mounted user_data volume.
+    # We start in 'trade' mode, but this can be overridden for backtesting.
+    command: >
+      trade --config /freqtrade/user_data/config.json --db-url sqlite:////freqtrade/user_data/tradesv3.sqlite
