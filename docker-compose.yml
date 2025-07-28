@@ -14,5 +14,5 @@ services:
       - "./bot/user_data:/freqtrade/user_data"
     # Command to start the bot. It will use the config.json inside the mounted user_data volume.
     # We start in 'trade' mode, but this can be overridden for backtesting.
-    command: >
-      trade --config /freqtrade/user_data/config.json --db-url sqlite:////freqtrade/user_data/tradesv3.sqlite
+    
+    command: -c "sleep infinity"
