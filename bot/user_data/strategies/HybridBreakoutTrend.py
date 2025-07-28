@@ -13,16 +13,17 @@ import freqtrade.vendor.qtpylib.indicators as qtpylib
 
 class HybridBreakoutTrend(IStrategy):
     """
-    Hybrid Breakout & Trend Following Strategy (HybridBreakoutTrend) - V7
+    Hybrid Breakout & Trend Following Strategy (HybridBreakoutTrend) - V8 (Robust)
 
     This is a multi-regime strategy for SPOT TRADING.
 
-    V7 Changes:
-    - Added a volatility filter (ATR) to the breakout entry logic to avoid
-      choppy market conditions where this model underperforms.
+    V8 Changes:
+    - Reverted to the robust V7 parameters after Hyperopt led to overfitting.
+    - Introduced pair-specific logic: a more conservative trend confirmation
+      (higher ADX) is now required for BTC/USDT.
     """
 
-    # --- Strategy Hyperparameters ---
+    # --- Strategy Hyperparameters (Reverted to robust V7 defaults) ---
     adx_period = IntParameter(10, 20, default=14, space='buy', optimize=True)
     adx_threshold = IntParameter(20, 30, default=25, space='buy', optimize=True)
     bb_period = IntParameter(20, 40, default=20, space='buy', optimize=True)
@@ -58,7 +59,7 @@ class HybridBreakoutTrend(IStrategy):
         dataframe['bb_lowerband'] = bollinger['lower']
         dataframe['bb_middleband'] = bollinger['mid']
         dataframe['bb_upperband'] = bollinger['upper']
-        dataframe['bb_width'] = (dataframe['bb_upperband'] - dataframe['bb_lowerband']) / dataframe['bb_middleband']
+        dataframe['bb_width'] = (dataframe['bb_upperband'] - dataframe['bb_middleband']) / dataframe['bb_middleband']
         dataframe['bb_width_quantile'] = dataframe['bb_width'].rolling(self.squeeze_period.value).quantile(self.squeeze_ratio.value)
 
         dataframe['ema_short'] = ta.EMA(dataframe, timeperiod=self.ema_short_period.value)
@@ -66,7 +67,6 @@ class HybridBreakoutTrend(IStrategy):
         
         dataframe['volume_mean_slow'] = dataframe['volume'].rolling(window=30).mean()
         dataframe['rsi'] = ta.RSI(dataframe)
-        # NEW: Add ATR for the volatility filter
         dataframe['atr'] = ta.ATR(dataframe, timeperiod=14)
 
         return dataframe
@@ -77,18 +77,24 @@ class HybridBreakoutTrend(IStrategy):
         breakout_conditions = []
         breakout_conditions.append(dataframe['volume_mean_slow'] > 0)
         breakout_conditions.append(dataframe['adx'] < self.adx_threshold.value)
-        # NEW: Volatility Filter using ATR. Only trade breakouts in low-volatility conditions.
-        breakout_conditions.append((dataframe['atr'] / dataframe['close']) < 0.04) # ATR as % of price must be < 4%
+        breakout_conditions.append((dataframe['atr'] / dataframe['close']) < 0.04)
         breakout_conditions.append(dataframe['bb_width'] < dataframe['bb_width_quantile'])
         breakout_conditions.append(qtpylib.crossed_above(dataframe['close'], dataframe['bb_upperband']))
         breakout_conditions.append(dataframe['volume'] > dataframe['volume'].rolling(5).mean() * 1.5)
         
         dataframe.loc[reduce(operator.and_, breakout_conditions), ['enter_long', 'enter_tag']] = (1, 'breakout')
 
-        # --- SUB-STRATEGY 2: TREND FOLLOWING LOGIC ---
+        # --- SUB-STRATEGY 2: TREND FOLLOWING LOGIC with PAIR-SPECIFIC RULE ---
         trend_conditions = []
         trend_conditions.append(dataframe['volume_mean_slow'] > 0)
-        trend_conditions.append(dataframe['adx'] >= self.adx_threshold.value)
+        
+        # NEW: PAIR-SPECIFIC LOGIC
+        # For BTC, require a stronger trend signal (higher ADX)
+        if metadata['pair'] == 'BTC/USDT':
+            trend_conditions.append(dataframe['adx'] >= 30)
+        else:
+            trend_conditions.append(dataframe['adx'] >= self.adx_threshold.value)
+            
         trend_conditions.append(dataframe['ema_short'] > dataframe['ema_long'])
         trend_conditions.append(qtpylib.crossed_above(dataframe['ema_short'], dataframe['ema_long']))
         
@@ -100,12 +106,7 @@ class HybridBreakoutTrend(IStrategy):
 
     def populate_exit_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         
-        dataframe.loc[
-            (
-                (dataframe['rsi'] < 45)
-            ),
-            'exit_long'] = 1
-            
+        dataframe.loc[((dataframe['rsi'] < 45)), 'exit_long'] = 1
         dataframe.loc[dataframe['exit_long'] == 1, 'enter_long'] = 0
             
         return dataframe
