@@ -110,7 +110,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   name                  = "freqtrade-vm"
   resource_group_name   = azurerm_resource_group.rg.name
   location              = azurerm_resource_group.rg.location
-  size                  = "Standard_B1s" # A cheap, burstable VM perfect for our needs
+  size                  = "Standard_B2s" 
   admin_username        = "freqtrader"
   network_interface_ids = [azurerm_network_interface.nic.id]
 
