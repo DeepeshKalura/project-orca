@@ -12,28 +12,19 @@ import freqtrade.vendor.qtpylib.indicators as qtpylib
 
 class HybridBreakoutTrend(IStrategy):
     """
-    Hybrid Breakout & Trend Following Strategy (HybridBreakoutTrend) - V2
+    Hybrid Breakout & Trend Following Strategy (HybridBreakoutTrend) - V5
 
-    This is a multi-regime strategy that combines two distinct models:
-    1.  A Volatility Breakout model, designed for ranging/consolidating markets.
-    2.  A Trend Following model, designed for established trending markets.
+    This is a multi-regime strategy for SPOT TRADING.
 
-    The strategy uses the Average Directional Index (ADX) to determine the
-    current market regime and applies the appropriate model.
-
-    V2 Changes:
-    - Implemented realistic stoploss and ROI for risk management.
-    - Added a volume check to avoid illiquid pairs.
-    - Corrected the ADX "dead zone" to ensure a model is always active.
-    - Improved trend-following logic for more reliable entries.
-    - Added entry tags for better trade analysis.
+    V5 Changes:
+    - Replaced lagging exit_signal with a faster, momentum-based RSI exit to cut losses.
+    - Added a volume spike confirmation to breakout entries to filter false breakouts.
     """
 
     # --- Strategy Hyperparameters ---
 
     # -- Regime Filter --
     adx_period = IntParameter(10, 20, default=14, space='buy', optimize=True)
-    # This single threshold now separates the two regimes.
     adx_threshold = IntParameter(20, 30, default=25, space='buy', optimize=True)
 
     # -- Sub-Strategy 1: Volatility Breakout Parameters --
@@ -50,22 +41,17 @@ class HybridBreakoutTrend(IStrategy):
     timeframe = '1h'
 
     # --- Risk Management ---
-    # Realistic ROI table. Takes profit based on trade duration.
     minimal_roi = {
         "60": 0.03,
         "180": 0.02,
         "360": 0.01,
         "0": 0.05
     }
-    # A sensible hard stoploss to protect capital.
     stoploss = -0.10
     trailing_stop = False
 
 
     def populate_indicators(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        # -- Convert data types --
-        # This is good practice but often not necessary if data is clean.
-        # It's kept here for robustness.
         for col in ['open', 'high', 'low', 'close', 'volume']:
             dataframe[col] = dataframe[col].astype('float')
 
@@ -86,60 +72,49 @@ class HybridBreakoutTrend(IStrategy):
         dataframe['ema_short'] = ta.EMA(dataframe, timeperiod=self.ema_short_period.value)
         dataframe['ema_long'] = ta.EMA(dataframe, timeperiod=self.ema_long_period.value)
         
-        # --- Protective Volume Indicator ---
+        # --- Protective & Confirmation Indicators ---
         dataframe['volume_mean_slow'] = dataframe['volume'].rolling(window=30).mean()
+        # Add RSI for the new momentum-based exit
+        dataframe['rsi'] = ta.RSI(dataframe)
 
         return dataframe
 
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         
-        conditions = []
-        # --- Mandatory Protections ---
-        # Ensure the pair has some volume. A crucial guard.
-        conditions.append(dataframe['volume_mean_slow'] > 0)
-        
         # --- SUB-STRATEGY 1: VOLATILITY BREAKOUT LOGIC (for RANGING markets) ---
         breakout_conditions = []
+        breakout_conditions.append(dataframe['volume_mean_slow'] > 0)
         breakout_conditions.append(dataframe['adx'] < self.adx_threshold.value)
         breakout_conditions.append(dataframe['bb_width'] < dataframe['bb_width_quantile'])
         breakout_conditions.append(qtpylib.crossed_above(dataframe['close'], dataframe['bb_upperband']))
+        # NEW: Add Volume Spike Confirmation for Breakouts
+        breakout_conditions.append(dataframe['volume'] > dataframe['volume'].rolling(5).mean() * 1.5)
         
-        # Set entry signal and tag for breakout
         dataframe.loc[reduce(operator.and_, breakout_conditions), ['enter_long', 'enter_tag']] = (1, 'breakout')
 
 
         # --- SUB-STRATEGY 2: TREND FOLLOWING LOGIC (for TRENDING markets) ---
         trend_conditions = []
+        trend_conditions.append(dataframe['volume_mean_slow'] > 0)
         trend_conditions.append(dataframe['adx'] >= self.adx_threshold.value)
-        # Check that we are in an established uptrend, not just the cross moment.
         trend_conditions.append(dataframe['ema_short'] > dataframe['ema_long'])
-        # Add a cross check as a trigger within the established trend
         trend_conditions.append(qtpylib.crossed_above(dataframe['ema_short'], dataframe['ema_long']))
         
-        # Set entry signal and tag for trend
         dataframe.loc[reduce(operator.and_, trend_conditions), ['enter_long', 'enter_tag']] = (1, 'trend')
-
-        # Combine mandatory protections with entry signals
-        dataframe.loc[
-            (dataframe['enter_long'] == 1) &
-            (dataframe['volume_mean_slow'] > 0)
-        , 'enter_long'] = 1
 
         # We will not generate a sell signal on the same candle we enter
         dataframe.loc[dataframe['enter_long'] == 1, 'exit_long'] = 0
         
         return dataframe
 
-
     def populate_exit_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        # --- UNIFIED EXIT CONDITION ---
-        exit_condition = (
-            qtpylib.crossed_below(dataframe['close'], dataframe['bb_middleband'])
-        )
-
+        
+        # --- NEW Momentum-Based Exit Signal ---
+        # Exit if RSI drops below 45, indicating momentum is lost.
+        # This is a much faster signal than waiting for a MA cross.
         dataframe.loc[
             (
-                exit_condition
+                (dataframe['rsi'] < 45)
             ),
             'exit_long'] = 1
             
