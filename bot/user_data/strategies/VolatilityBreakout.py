@@ -45,7 +45,10 @@ class VolatilityBreakout(IStrategy):
     stoploss = -0.99           # Set to a high value to effectively disable it
     
     # We don't need freqtrade's native trailing stop-loss because we use a custom one
-    trailing_stop = False
+    trailing_stop = True
+    trailing_stop_positive = 0.01
+    trailing_stop_positive_offset = 0.02
+    trailing_only_offset_is_reached = True
     
     # Process only new candles
     process_only_new_candles = True

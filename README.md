@@ -94,3 +94,26 @@ For detailed instructions on deploying a validated strategy to a production serv
 
 ## Development 
 
+First how much you wanted to run the timestamp and the idea my man!!
+
+ date -d '2025-07-25' +%s &  date -d '2025-08-05' +%s 
+
+ run this put values in between then paste on the command my man.
+
+## Download data for given timestamp ok
+
+```
+docker compose run --rm freqtrade backtesting --config user_data/config.json --strategy HybridBreakoutTrend --timerange 20250628-20250728 --cache none
+```
+
+
+## Important command to check and work for my entire things 
+
+```
+docker compose run --rm freqtrade backtesting --config user_data/config.json --strategy HybridBreakoutTrend --timerange $(date -d "365 days ago" +%Y%m%d)- --cache none
+```
+
+Install data for days if you wish
+```
+ docker compose run --rm freqtrade download-data --exchange binance --timeframes 1h --days 365 --erase
+```

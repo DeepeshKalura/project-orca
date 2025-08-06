@@ -23,6 +23,10 @@ class HybridBreakoutTrend(IStrategy):
       (higher ADX) is now required for BTC/USDT.
     """
 
+    def __init__(self, config: dict) -> None:
+        super().__init__(config)
+        self.dp = None 
+
     # --- Strategy Hyperparameters (Reverted to robust V7 defaults) ---
     adx_period = IntParameter(10, 20, default=14, space='buy', optimize=True)
     adx_threshold = IntParameter(20, 30, default=25, space='buy', optimize=True)
@@ -38,13 +42,14 @@ class HybridBreakoutTrend(IStrategy):
 
     # --- Risk Management ---
     minimal_roi = {
-        "60": 0.03,
-        "180": 0.02,
-        "360": 0.01,
-        "0": 0.05
+        "0": 0.2
     }
-    stoploss = -0.10
-    trailing_stop = False
+    stoploss = -0.02
+    trailing_stop = True
+    trailing_stop_positive = 0.01
+    trailing_stop_positive_offset = 0.02
+    trailing_only_offset_is_reached = True
+    use_custom_stoploss = True
 
 
     def populate_indicators(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
@@ -68,6 +73,7 @@ class HybridBreakoutTrend(IStrategy):
         dataframe['volume_mean_slow'] = dataframe['volume'].rolling(window=30).mean()
         dataframe['rsi'] = ta.RSI(dataframe)
         dataframe['atr'] = ta.ATR(dataframe, timeperiod=14)
+        dataframe['ema_200'] = ta.EMA(dataframe, timeperiod=200)
 
         return dataframe
 
@@ -80,8 +86,8 @@ class HybridBreakoutTrend(IStrategy):
         breakout_conditions.append((dataframe['atr'] / dataframe['close']) < 0.04)
         breakout_conditions.append(dataframe['bb_width'] < dataframe['bb_width_quantile'])
         breakout_conditions.append(qtpylib.crossed_above(dataframe['close'], dataframe['bb_upperband']))
-        breakout_conditions.append(dataframe['volume'] > dataframe['volume'].rolling(5).mean() * 1.5)
-        
+        breakout_conditions.append(dataframe['volume'] > dataframe['volume'].rolling(5).mean() * 2)
+        breakout_conditions.append(dataframe['close'].shift(1) > dataframe['ema_short']) 
         dataframe.loc[reduce(operator.and_, breakout_conditions), ['enter_long', 'enter_tag']] = (1, 'breakout')
 
         # --- SUB-STRATEGY 2: TREND FOLLOWING LOGIC with PAIR-SPECIFIC RULE ---
@@ -96,13 +102,15 @@ class HybridBreakoutTrend(IStrategy):
         else:
             trend_conditions.append(dataframe['adx'] >= self.adx_threshold.value)
             trend_conditions.append(dataframe['rsi'] < 70) 
-            
+        
+        trend_conditions.append(dataframe['close'] > dataframe['ema_200'])   
         trend_conditions.append(dataframe['ema_short'] > dataframe['ema_long'])
         trend_conditions.append(qtpylib.crossed_above(dataframe['ema_short'], dataframe['ema_long']))
 
 
         
         dataframe.loc[reduce(operator.and_, trend_conditions), ['enter_long', 'enter_tag']] = (1, 'trend')
+        dataframe.loc[dataframe['enter_long'] == 1, 'custom_stop_atr'] = dataframe['atr']
 
         dataframe.loc[dataframe['enter_long'] == 1, 'exit_long'] = 0
         
@@ -128,3 +136,32 @@ class HybridBreakoutTrend(IStrategy):
             return 'loss_timeout'
 
         return None
+    
+    def custom_stoploss(self, pair: str, trade: 'Trade', current_time: 'datetime',
+                            current_rate: float, current_profit: float, **kwargs) -> float:
+        """
+        Custom stoploss based on ATR on the entry candle.
+        """
+        # Multiplier for ATR. A value of 2 is a common starting point.
+        atr_multiplier = 2.0
+
+        # Get the dataframe for the pair
+        if not self.dp:
+            return -0.99
+        dataframe, _ = self.dp.get_analyzed_dataframe(pair, self.timeframe)
+        
+        # Find the ATR of the entry candle
+        entry_candle = dataframe.loc[dataframe['date'] == trade.open_date_utc]
+        if not entry_candle.empty:
+            entry_atr = entry_candle['atr'].iat[0]
+        else:
+            # Could not find candle, use a safe default
+            return -0.99
+
+        # Calculate the stop loss price
+        stop_price = trade.open_rate - (entry_atr * atr_multiplier)
+        
+        # Calculate the stop loss percentage. This is what the function must return.
+        stop_loss_pct = (stop_price / trade.open_rate) - 1.0
+
+        return stop_loss_pct
