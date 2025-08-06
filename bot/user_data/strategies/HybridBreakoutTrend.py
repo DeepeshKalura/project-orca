@@ -42,12 +42,12 @@ class HybridBreakoutTrend(IStrategy):
 
     # --- Risk Management ---
     minimal_roi = {
-        "0": 0.2
+        "0": 0.22
     }
-    stoploss = -0.02
+    stoploss = -0.99
     trailing_stop = True
-    trailing_stop_positive = 0.01
-    trailing_stop_positive_offset = 0.02
+    trailing_stop_positive = 0.05
+    trailing_stop_positive_offset = 0.06
     trailing_only_offset_is_reached = True
     use_custom_stoploss = True
 
@@ -77,65 +77,24 @@ class HybridBreakoutTrend(IStrategy):
 
         return dataframe
 
-    def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        
-        # --- SUB-STRATEGY 1: VOLATILITY BREAKOUT LOGIC ---
-        breakout_conditions = []
-        breakout_conditions.append(dataframe['volume_mean_slow'] > 0)
-        breakout_conditions.append(dataframe['adx'] < self.adx_threshold.value)
-        breakout_conditions.append((dataframe['atr'] / dataframe['close']) < 0.04)
-        breakout_conditions.append(dataframe['bb_width'] < dataframe['bb_width_quantile'])
-        breakout_conditions.append(qtpylib.crossed_above(dataframe['close'], dataframe['bb_upperband']))
-        breakout_conditions.append(dataframe['volume'] > dataframe['volume'].rolling(5).mean() * 2)
-        breakout_conditions.append(dataframe['close'].shift(1) > dataframe['ema_short']) 
-        dataframe.loc[reduce(operator.and_, breakout_conditions), ['enter_long', 'enter_tag']] = (1, 'breakout')
 
-        # --- SUB-STRATEGY 2: TREND FOLLOWING LOGIC with PAIR-SPECIFIC RULE ---
-        trend_conditions = []
-        trend_conditions.append(dataframe['volume_mean_slow'] > 0)
-        
-        # NEW: PAIR-SPECIFIC LOGIC
-        # For BTC, require a stronger trend signal (higher ADX)
-        if metadata['pair'] == 'BTC/USDT':
-            trend_conditions.append(dataframe['adx'] >= 30)
-            trend_conditions.append(dataframe['rsi'] < 75) 
-        else:
-            trend_conditions.append(dataframe['adx'] >= self.adx_threshold.value)
-            trend_conditions.append(dataframe['rsi'] < 70) 
-        
-        trend_conditions.append(dataframe['close'] > dataframe['ema_200'])   
-        trend_conditions.append(dataframe['ema_short'] > dataframe['ema_long'])
-        trend_conditions.append(qtpylib.crossed_above(dataframe['ema_short'], dataframe['ema_long']))
-
-
-        
-        dataframe.loc[reduce(operator.and_, trend_conditions), ['enter_long', 'enter_tag']] = (1, 'trend')
-        dataframe.loc[dataframe['enter_long'] == 1, 'custom_stop_atr'] = dataframe['atr']
-
-        dataframe.loc[dataframe['enter_long'] == 1, 'exit_long'] = 0
-        
-        return dataframe
-
-    def populate_exit_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
-        
-        dataframe.loc[((dataframe['rsi'] < 45)), 'exit_long'] = 1
-        dataframe.loc[dataframe['exit_long'] == 1, 'enter_long'] = 0
-            
-        return dataframe
-
+      
     def custom_exit(self, pair: str, trade: Trade, current_time: 'datetime', current_rate: float,
-                    current_profit: float, **kwargs):
-        
-        dataframe, _ = self.dp.get_analyzed_dataframe(pair, self.timeframe)
-        last_candle = dataframe.iloc[-1].squeeze()
-
-        if current_profit > 0 and (last_candle['rsi'] < 50):
-            return 'rsi_profit_take'
+                        current_profit: float, **kwargs):
             
-        if (current_time - trade.open_date_utc).days >= 1 and current_profit < 0:
-            return 'loss_timeout'
+            dataframe, _ = self.dp.get_analyzed_dataframe(pair, self.timeframe)
+            last_candle = dataframe.iloc[-1].squeeze()
 
-        return None
+            # if current_profit > 0 and (last_candle['rsi'] < 50):
+            #     return 'rsi_profit_take'
+                
+            # THIS IS OUR DIAGNOSTIC TEST
+            if (current_time - trade.open_date_utc).total_seconds() / 3600 > 10:
+                return 'timeout_exit'
+
+            return None
+
+    
     
     def custom_stoploss(self, pair: str, trade: 'Trade', current_time: 'datetime',
                             current_rate: float, current_profit: float, **kwargs) -> float:
@@ -143,7 +102,7 @@ class HybridBreakoutTrend(IStrategy):
         Custom stoploss based on ATR on the entry candle.
         """
         # Multiplier for ATR. A value of 2 is a common starting point.
-        atr_multiplier = 2.0
+        atr_multiplier = 2.5
 
         # Get the dataframe for the pair
         if not self.dp:
@@ -165,3 +124,55 @@ class HybridBreakoutTrend(IStrategy):
         stop_loss_pct = (stop_price / trade.open_rate) - 1.0
 
         return stop_loss_pct
+
+    def populate_exit_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
+        # This function is required by Freqtrade.
+        # We're not using it for our main exit logic, but we must return the dataframe.
+        # To satisfy the safety check, we can explicitly set the exit signal to 0.
+        dataframe['exit_long'] = 0
+        return dataframe
+    
+    def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
+        print("Mother fucker")
+        
+        # --- SUB-STRATEGY 1: VOLATILITY BREAKOUT LOGIC ---
+        # breakout_conditions = []
+        # breakout_conditions.append(dataframe['volume_mean_slow'] > 0)
+        # breakout_conditions.append(dataframe['adx'] < self.adx_threshold.value)
+        # breakout_conditions.append((dataframe['atr'] / dataframe['close']) < 0.04)
+        # breakout_conditions.append(dataframe['bb_width'] < dataframe['bb_width_quantile'])
+        # breakout_conditions.append(qtpylib.crossed_above(dataframe['close'], dataframe['bb_upperband']))
+        # breakout_conditions.append(dataframe['volume'] > dataframe['volume'].rolling(5).mean() * 2)
+        # breakout_conditions.append(dataframe['close'].shift(1) > dataframe['ema_short']) 
+        # dataframe.loc[reduce(operator.and_, breakout_conditions), ['enter_long', 'enter_tag']] = (1, 'breakout')
+
+        # --- SUB-STRATEGY 2: TREND FOLLOWING LOGIC with PAIR-SPECIFIC RULE ---
+        trend_conditions = []
+
+        # --- CORE TREND CONDITIONS ---
+        trend_conditions.append(dataframe['close'] > dataframe['ema_200'])
+        trend_conditions.append(dataframe['ema_short'] > dataframe['ema_long'])  
+        trend_conditions.append(dataframe['adx'] > self.adx_threshold.value)
+
+        # ---> NEW FILTER 1: The "Oversold Pullback" Filter <---
+        # The pullback must be deep enough to reset momentum (RSI on prior candle < 55)
+        trend_conditions.append(dataframe['rsi'].shift(1) < 55)
+
+        # ---> NEW FILTER 2: The "Momentum Confirmation" Filter <---
+        # Momentum must be returning in our favor (RSI is ticking up)
+        trend_conditions.append(dataframe['rsi'] > dataframe['rsi'].shift(1))
+
+        # --- ENTRY TRIGGER ---
+        trend_conditions.append(qtpylib.crossed_above(dataframe['close'], dataframe['ema_short']))
+
+        # (Your other volume and original RSI ceiling checks remain)
+        trend_conditions.append(dataframe['volume_mean_slow'] > 0)
+        if metadata['pair'] == 'BTC/USDT':
+            trend_conditions.append(dataframe['adx'] >= 30)
+            trend_conditions.append(dataframe['rsi'] < 75) 
+        else:
+            trend_conditions.append(dataframe['rsi'] < 70) 
+
+        dataframe.loc[reduce(operator.and_, trend_conditions), ['enter_long', 'enter_tag']] = (1, 'trend')
+
+        return dataframe
