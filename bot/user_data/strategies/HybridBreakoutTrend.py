@@ -92,11 +92,15 @@ class HybridBreakoutTrend(IStrategy):
         # For BTC, require a stronger trend signal (higher ADX)
         if metadata['pair'] == 'BTC/USDT':
             trend_conditions.append(dataframe['adx'] >= 30)
+            trend_conditions.append(dataframe['rsi'] < 75) 
         else:
             trend_conditions.append(dataframe['adx'] >= self.adx_threshold.value)
+            trend_conditions.append(dataframe['rsi'] < 70) 
             
         trend_conditions.append(dataframe['ema_short'] > dataframe['ema_long'])
         trend_conditions.append(qtpylib.crossed_above(dataframe['ema_short'], dataframe['ema_long']))
+
+
         
         dataframe.loc[reduce(operator.and_, trend_conditions), ['enter_long', 'enter_tag']] = (1, 'trend')
 
