@@ -1,0 +1,34 @@
+{
+  "strategy_name": "TrendRunner",
+  "params": {
+    "roi": {
+      "0": 1.0
+    },
+    "stoploss": {
+      "stoploss": -0.99
+    },
+    "trailing": {
+      "trailing_stop": false,
+      "trailing_stop_positive": null,
+      "trailing_stop_positive_offset": 0.0,
+      "trailing_only_offset_is_reached": false
+    },
+    "max_open_trades": {
+      "max_open_trades": 4
+    },
+    "buy": {
+      "adx_period": 14,
+      "adx_threshold": 25,
+      "bb_period": 20,
+      "bb_stddev": 2.0,
+      "ema_long_period": 50,
+      "ema_short_period": 21
+    },
+    "sell": {
+      "atr_multiplier": 2.828
+    },
+    "protection": {}
+  },
+  "ft_stratparam_v": 1,
+  "export_time": "2025-08-07 05:22:49.904722+00:00"
+}

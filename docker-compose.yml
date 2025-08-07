@@ -1,6 +1,6 @@
 services:
   freqtrade:
-    image: freqtradeorg/freqtrade:stable
+    image: freqtradeorg/freqtrade:develop_plot
     # We rename the container to make it easier to reference in commands
     container_name: freqtrade
     # Restart the container automatically unless it's explicitly stopped
